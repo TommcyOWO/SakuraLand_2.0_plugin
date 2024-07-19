@@ -1,0 +1,4 @@
+name: SakuraLand_plugin
+version: '1.0-SNAPSHOT'
+main: org.system.sakuraLand_plugin.SakuraLand_plugin
+api-version: '1.20'
