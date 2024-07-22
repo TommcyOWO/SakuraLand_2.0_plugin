@@ -3,24 +3,21 @@ package org.system.sakuraLand_plugin.EventListener;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.system.sakuraLand_plugin.Creater.NewComerGiftCreater;
-import org.bukkit.event.Listener;
-import org.bukkit.plugin.Plugin;
-
 import org.system.sakuraLand_plugin.global;
 
-public class NewComer implements Listener {
+public class onNewComer implements Listener {
     private final NewComerGiftCreater creater;
 
-    public NewComer(Plugin plugin) {
-        this.creater = new NewComerGiftCreater(plugin);
+    public onNewComer(NewComerGiftCreater creater) {
+        this.creater = creater;
     }
 
     @EventHandler
@@ -36,21 +33,23 @@ public class NewComer implements Listener {
     }
 
     @EventHandler
-    public void onInventoryClose(InventoryCloseEvent event) {
-        if (event.getInventory().getType() == InventoryType.SHULKER_BOX) {
-            Inventory inventory = event.getInventory();
-            ItemStack item = event.getPlayer().getInventory().getItemInMainHand();
-            if (item.getType() == Material.SHULKER_BOX && item.hasItemMeta()) {
-                BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
-                if (meta != null && meta.getPersistentDataContainer().has(global.key, PersistentDataType.STRING)) {
-                    Player player = (Player) event.getPlayer();
-                    for (ItemStack content : inventory.getContents()) {
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+        ItemStack item = event.getItem();
+
+        if (item != null && item.getType() == Material.SHULKER_BOX && item.hasItemMeta()) {
+            BlockStateMeta meta = (BlockStateMeta) item.getItemMeta();
+            if (meta != null && meta.getPersistentDataContainer().has(global.key, PersistentDataType.STRING)) {
+                if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+                    org.bukkit.block.ShulkerBox shulkerBox = (org.bukkit.block.ShulkerBox) meta.getBlockState();
+                    for (ItemStack content : shulkerBox.getInventory().getContents()) {
                         if (content != null) {
                             player.getInventory().addItem(content);
                         }
                     }
-                    player.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
-                    player.sendMessage("新手禮包已關閉，剩餘物品會放入你的背包。");
+                    player.getInventory().remove(item);
+                    player.sendMessage("新手禮包已開啟，物品已放入你的背包。");
+                    event.setCancelled(true);
                 }
             }
         }
